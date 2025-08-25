@@ -1,0 +1,8 @@
+# XiaoZhi AI Voice Assistant - RDK X5 Dependencies
+# 小智AI语音助手 - RDK X5 依赖包
+paho-mqtt>=1.6.1
+PyAudio>=0.2.11
+opuslib>=3.0.1
+cryptography>=41.0.7
+requests>=2.31.0
+
