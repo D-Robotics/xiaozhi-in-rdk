@@ -252,7 +252,7 @@ tail -f xiaozhi.log
 # 1. 降低系统负载
 # 2. 使用更好的USB音频设备
 # 3. 检查CPU使用率
-top
+htop
 ```
 
 #### Q4: 音频延迟过大
