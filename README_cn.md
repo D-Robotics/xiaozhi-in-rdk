@@ -111,6 +111,11 @@ aplay -l | grep default
 # 测试音频功能
 arecord -f cd -t wav -d 3 test.wav  # 录制3秒测试
 aplay test.wav                       # 播放测试
+
+# 若录制的音频没有声音，需调整麦克风音量
+alsamixer  # 按F4选择录音设备，用方向键调整音量
+# 或使用命令行：
+amixer sset Capture 80%  # 设置录音音量为80%
 ```
 
 ### 4. 运行程序

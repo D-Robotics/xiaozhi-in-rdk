@@ -114,6 +114,11 @@ aplay -l | grep default
 # Test audio functionality
 arecord -f cd -t wav -d 3 test.wav  # Record 3-second test
 aplay test.wav                       # Play test
+
+# If recorded audio has no sound, adjust microphone volume
+alsamixer  # Press F4 to select capture device, use arrow keys to adjust volume
+# Or use command line:
+amixer sset Capture 80%  # Set capture volume to 80%
 ```
 
 ### 4. Run the Program
