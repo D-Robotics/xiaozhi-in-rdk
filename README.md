@@ -255,7 +255,7 @@ tail -f xiaozhi.log
 # 1. Reduce system load
 # 2. Use better USB audio device
 # 3. Check CPU usage
-top
+htop
 ```
 
 #### Q4: High audio latency
