@@ -1,22 +1,24 @@
 [English](./README.md) | 简体中文
-# 小智AI语音助手 - RDK X5
+# 小智AI语音助手 - RDK系列
 
-> **地瓜机器人团队** 官方RDK X5平台适配项目  
+> **地瓜机器人团队** 官方RDK系列平台适配项目
 
 ## 项目简介
 
-本项目是小智AI语音助手在RDK X5嵌入式开发板上的专业适配版本，实现了完整的实时语音交互功能。通过针对ARM架构和嵌入式环境的深度优化，提供了稳定、高效的AI语音交互体验。
+本项目是小智AI语音助手在RDK系列嵌入式开发板上的专业适配版本，实现了完整的实时语音交互功能。通过针对ARM架构和嵌入式环境的深度优化，提供了稳定、高效的AI语音交互体验。
+
+**支持板卡**: RDK X3 / RDK X5 / RDK S100
 
 **特别感谢** [@huangjunsen0406](https://github.com/huangjunsen0406) 的 [py-xiaozhi项目](https://github.com/huangjunsen0406/py-xiaozhi) 提供的技术基础支持。
 
 ### 核心特性
 
-- **专为RDK X5优化**: ARM架构深度适配，性能卓越
+- **全系列RDK支持**: 适配RDK X3/X5/S100，ARM架构深度优化
 - **实时语音交互**: 16kHz/24kHz采样率，超低延迟处理
 - **端到端加密**: AES-128-CTR模式保障数据安全
 - **双协议支持**: MQTT控制 + UDP音频传输
+- **YOLOv8目标检测**: MCP协议集成，AI可调用视觉能力
 - **简单易用**: 空格键交互，一键启动
-- **单文件部署**: 无复杂依赖，快速部署
 
 ## 系统架构
 
@@ -30,13 +32,13 @@
 ## 环境要求
 
 ### 硬件要求
-- **开发板**: RDK X5
-- **音频**: 麦克风和扬声器
+- **开发板**: RDK X3 / RDK X5 / RDK S100
+- **音频设备（推荐）**: USB麦克风和USB扬声器
+  - 也可使用RDK X5板载音频接口（需配置默认设备）
 - **网络**: WiFi或以太网连接
 
 ### 软件依赖
 - **系统**: rdkos 3.0.0+
-- **Python**: 3.10+
 - **音频库**: ALSA + PulseAudio
 
 ## 快速开始
@@ -56,20 +58,55 @@ sudo apt install alsa-utils pulseaudio-utils -y
 ### 2. 安装Python依赖
 
 ```bash
-# 安装核心依赖包
-pip3 install paho-mqtt==1.6.1
-pip3 install PyAudio==0.2.11
-pip3 install opuslib==3.0.1
-pip3 install cryptography==41.0.7
-pip3 install requests==2.31.0
+# 安装所有依赖包（自动安装最新版本）
+pip3 install -r requirements.txt
 ```
 
 ### 3. 音频设备配置
 
+**推荐使用USB音频设备**以获得最佳体验。如需使用RDK X5板载音频接口，请按以下步骤配置默认设备。
+
+#### 查看音频设备
+
 ```bash
-# 检查音频设备
-aplay -l    # 查看播放设备
-arecord -l  # 查看录制设备
+# 查看播放设备
+aplay -l
+
+# 查看录制设备
+arecord -l
+```
+
+#### 配置默认音频设备（可选）
+
+如果您使用RDK X5板载音频或需要更改默认设备，请编辑 ALSA 配置文件：
+
+```bash
+# 编辑配置文件
+nano ~/.asoundrc
+```
+
+添加以下内容（根据实际设备编号调整）：
+
+```bash
+# 默认播放设备设为 card 1，录音设备 card 0
+pcm.!default {
+    type asym
+    playback.pcm "plughw:1,0"    # 播放 - 支持自动转换
+    capture.pcm "plughw:0,0"     # 录音 - 支持自动转换
+}
+
+# 控制设备
+ctl.!default {
+    type hw
+    card 1
+}
+```
+
+验证配置：
+
+```bash
+# 查看默认设备
+aplay -l | grep default
 
 # 测试音频功能
 arecord -f cd -t wav -d 3 test.wav  # 录制3秒测试
@@ -78,20 +115,31 @@ aplay test.wav                       # 播放测试
 
 ### 4. 运行程序
 
+**仅语音助手:**
 ```bash
-# 下载并运行
-wget https://github.com/D-Robotics/xiaozhi-in-rdk/main/xiaozhi-in-rdkx5.py
-python3 xiaozhi-in-rdkx5.py
+python3 xiaozhi-in-rdk.py
+```
+
+**语音助手 + YOLOv8检测 (推荐):**
+
+需要开启两个终端分别运行:
+
+```bash
+# 终端1: 启动小智主程序 (前台运行,支持空格键交互)
+python3 xiaozhi-in-rdk.py
+```
+
+```bash
+# 终端2: 启动MCP服务
+source /opt/tros/humble/setup.bash
+export MCP_ENDPOINT=ws://your-server:8765
+export CAM_TYPE=usb  # 或 mipi
+python3 mcp_pipe.py
 ```
 
 ## 使用指南
 
-### 启动程序
-```bash
-python3 xiaozhi-in-rdkx5.py
-```
-
-### 操作说明
+### 基础操作
 | 操作         | 按键         | 说明                            |
 | ------------ | ------------ | ------------------------------- |
 | **开始录音** | 按住 `SPACE` | 开始语音输入，显示"🎤倾听中..." |
@@ -104,6 +152,44 @@ python3 xiaozhi-in-rdkx5.py
 - **等待回复**: 处理语音并等待AI回复
 - **播放中**: AI正在回复
 - **播放完成**: 回复播放结束
+
+### YOLOv8目标检测 (MCP服务)
+
+启用MCP服务后，AI可通过以下工具控制YOLOv8目标检测。支持所有RDK板卡（X3/X5/S100）。
+
+#### YOLOv8可用工具
+1. **start_yolov8_detection(camera_type)** - 启动YOLOv8检测服务
+2. **stop_yolov8_detection()** - 停止YOLOv8检测服务
+3. **get_yolov8_status()** - 查询YOLOv8运行状态
+4. **restart_yolov8_detection(camera_type)** - 重启YOLOv8服务
+5. **switch_camera(camera_type)** - 切换摄像头
+
+#### 预览网址
+启动YOLOv8检测服务后，可通过以下地址查看实时检测画面：
+- **本地预览**: `http://127.0.0.1:8000`
+- **局域网预览**: `http://<wlan0_IP地址>:8000`
+
+服务启动时会自动检测wlan0连接状态并显示对应的预览地址：
+- ✅ wlan0已连接：显示 `🎥 预览地址: http://192.168.x.x:8000`
+- ⚠️ wlan0未连接：显示 `⚠️ wlan0未连接，预览地址: http://127.0.0.1:8000`
+
+#### 语音控制示例
+
+```
+👤 用户: "启动YOLOv8目标检测"
+🤖 小智: "好的，正在启动YOLOv8检测服务..."
+       YOLOv8检测服务启动成功 (摄像头: usb)
+       🎥 预览地址: http://192.168.1.100:8000
+       [AI调用: start_yolov8_detection("usb")]
+
+👤 用户: "停止YOLOv8检测"
+🤖 小智: "YOLOv8检测已停止"
+       [AI调用: stop_yolov8_detection()]
+
+👤 用户: "YOLOv8检测状态如何?"
+🤖 小智: "YOLOv8目标检测正在运行，已运行120秒"
+       [AI调用: get_yolov8_status()]
+```
 
 ## 配置说明
 
@@ -152,21 +238,54 @@ sudo ufw allow 8883/tcp
 tail -f xiaozhi.log
 ```
 
-#### Q3: 音频延迟过大
+#### Q3: 录音溢出错误 (Input overflowed)
+```bash
+# 问题：麦克风缓冲区溢出
+# 解决方案：程序会自动跳过溢出的音频帧，不影响使用
+
+# 如果频繁出现，可尝试：
+# 1. 降低系统负载
+# 2. 使用更好的USB音频设备
+# 3. 检查CPU使用率
+top
+```
+
+#### Q4: 音频延迟过大
 - 使用有线网络连接
 - 确保系统负载不高
 - 检查USB音频设备连接稳定性
 
+#### Q5: MCP服务无法启动
+```bash
+# 检查MCP_ENDPOINT是否设置
+echo $MCP_ENDPOINT
+
+# 设置MCP端点
+export MCP_ENDPOINT=ws://your-server:8765
+```
+
+#### Q6: TROS环境未找到
+
+**RDK S100 安装 TROS:**
+```bash
+# 更新软件源
+sudo apt update
+
+# 安装TROS
+sudo apt install tros-humble
+```
+
+**配置 TROS 环境:**
+```bash
+# Source TROS环境
+source /opt/tros/humble/setup.bash
+
+# 永久设置
+echo "source /opt/tros/humble/setup.bash" >> ~/.bashrc
+```
+
 ### 日志查看
 程序运行时会生成 `xiaozhi.log` 日志文件，包含详细的运行信息和错误诊断。
-
-## 性能特性
-
-- **音频延迟**: 约80ms端到端延迟
-- **CPU占用**: 正常对话15-25%
-- **内存占用**: 45-60MB
-- **网络带宽**: 32kbps音频流
-- **连续运行**: 支持72小时稳定运行
 
 ## 开发贡献
 
@@ -188,7 +307,7 @@ tail -f xiaozhi.log
 ## 相关链接
 
 - [py-xiaozhi原始项目](https://github.com/huangjunsen0406/py-xiaozhi)
-- [RDK X5开发板官网](https://developer.d-robotics.cc/)
+- [RDK系列开发板官网](https://developer.d-robotics.cc/)
 - [地瓜机器人官网](https://d-robotics.cc/)
 
 ---
@@ -197,4 +316,4 @@ tail -f xiaozhi.log
 
 ---
 
-*最后更新: 2025年8月25日*
+*最后更新: 2025年10月15日*

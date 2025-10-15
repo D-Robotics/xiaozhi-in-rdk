@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "yolov8-detection": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["object_detection_yolov8.py"],
+      "env": {
+        "ROS_DOMAIN_ID": "0"
+      }
+    }
+  }
+}
