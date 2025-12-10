@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # XiaoZhi AI Voice Assistant - RDK Series
 
-> **DiGua Robotics Team** Official RDK Series Platform Adaptation Project
+> **D-Robotics Team** Official RDK Series Platform Adaptation Project
 
 ## Project Overview
 
